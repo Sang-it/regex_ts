@@ -1,0 +1,15 @@
+{
+    "name": "regex_ts",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "license": "MIT",
+    "scripts": {
+        "dev": "nodemon",
+        "build": "tsc",
+        "start": "node ."
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1",
+        "typescript": "^5.2.2"
+    }
+}
