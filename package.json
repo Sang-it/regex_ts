@@ -1,7 +1,18 @@
 {
-    "name": "regex_ts",
+    "name": "t_rex",
     "version": "1.0.0",
     "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "author": "Sangit Manandhar",
+    "description": "DFA based regex engine in typescript from scratch (not for production).",
+    "repository": "https://github.com/Sang-it/t_rex",
+    "keywords": [
+        "dfa",
+        "nfa",
+        "regex",
+        "regexp",
+        "regex engine"
+    ],
     "license": "MIT",
     "scripts": {
         "dev": "nodemon",

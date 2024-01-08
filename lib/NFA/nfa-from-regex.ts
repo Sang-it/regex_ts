@@ -1,8 +1,8 @@
 import { NFA } from './nfa';
-import parser from '../parser';
+import { regexpTreeParser } from '../parser';
 import { alt, char, or, rep, plusRep, questionRep } from './builders';
 
-interface RegExpNode {
+export interface RegExpNode {
     type: string;
     flags: string;
     kind: string;
@@ -17,7 +17,7 @@ interface RegExpNode {
     expression: RegExpNode;
 }
 
-function generateNFA(node: RegExpNode): NFA {
+export function generateNFA(node: RegExpNode): NFA {
     switch (node.type) {
         case 'RegExp':
             return generateNFA(node.body);
@@ -36,16 +36,16 @@ function generateNFA(node: RegExpNode): NFA {
     }
 }
 
-function generateAlternativeNFA(node: RegExpNode): NFA {
+export function generateAlternativeNFA(node: RegExpNode): NFA {
     const fragments = (node.expressions || []).map(generateNFA);
     return alt(fragments);
 }
 
-function generateDisjunctionNFA(node: RegExpNode): NFA {
+export function generateDisjunctionNFA(node: RegExpNode): NFA {
     return or(generateNFA(node.left), generateNFA(node.right));
 }
 
-function generateRepetitionNFA(node: RegExpNode): NFA {
+export function generateRepetitionNFA(node: RegExpNode): NFA {
     switch (node.quantifier.kind) {
         case '*':
             return rep(generateNFA(node.expression));
@@ -58,7 +58,7 @@ function generateRepetitionNFA(node: RegExpNode): NFA {
     }
 }
 
-function generateCharNFA(node: RegExpNode): NFA {
+export function generateCharNFA(node: RegExpNode): NFA {
     if (node.kind !== 'simple') {
         throw new Error(`Only simple chars are supported.`);
     }
@@ -66,7 +66,7 @@ function generateCharNFA(node: RegExpNode): NFA {
     return char(node.value);
 }
 
-function generateGroupNFA(node: RegExpNode): NFA {
+export function generateGroupNFA(node: RegExpNode): NFA {
     return generateNFA(node.expression);
 }
 
@@ -78,7 +78,7 @@ export function build(regexp: string): NFA {
     }
 
     if (typeof regexp === 'string') {
-        ast = parser.parse(regexp, {
+        ast = regexpTreeParser.parse(regexp, {
             captureLocations: true,
         });
 

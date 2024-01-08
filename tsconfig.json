@@ -2,6 +2,7 @@
     "compilerOptions": {
         "target": "es2017",
         "module": "commonjs",
+        "declaration": true,
         "lib": [
             "dom",
             "es6",
@@ -32,6 +33,6 @@
         "node_modules"
     ],
     "include": [
-        "./src/**/*.ts",
+        "./lib/**/*.ts",
     ]
 }

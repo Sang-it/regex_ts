@@ -9,4 +9,4 @@ regexpTreeParser.parse = function(regexp: unknown, options: Object) {
 
 regexpTreeParser.setOptions({ captureLocations: false });
 
-export default regexpTreeParser;
+export { regexpTreeParser };

@@ -1,8 +1,8 @@
 import { NFA } from '../NFA';
 import { EPSILON_CLOSURE } from '../constants';
 
-type DFATransitionTableInitial = Record<string, Record<string, string | number>>;
-type DFATransitionTableFinal = Record<string, Record<string, number>>;
+export type DFATransitionTableInitial = Record<string, Record<string, string | number>>;
+export type DFATransitionTableFinal = Record<string, Record<string, number>>;
 
 export class DFA {
     private _nfa: NFA;
