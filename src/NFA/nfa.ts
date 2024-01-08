@@ -1,13 +1,15 @@
 import { NFAState } from './nfa-state';
 import { EPSILON, EPSILON_CLOSURE } from '../constants';
 
+export type NFATransitionTable = Record<string, Record<string, string | number[]>>;
+
 export class NFA {
     in: NFAState;
     out: NFAState;
     _alphabet: Set<string>;
     _acceptingStates: Set<NFAState>;
     _acceptingStateNumbers: Set<number>;
-    _transitionTable: { [key: number]: { [key: string]: number[] } };
+    _transitionTable: NFATransitionTable;
 
     constructor(inState: NFAState, outState: NFAState) {
         this.in = inState;

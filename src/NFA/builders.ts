@@ -24,7 +24,7 @@ export function altPair(first: NFA, second: NFA) {
     return new NFA(first.in, second.out);
 }
 
-export function alt(first: NFA, ...fragments: NFA[]) {
+export function alt([first, ...fragments]: NFA[]) {
     for (let fragment of fragments) {
         first = altPair(first, fragment);
     }
