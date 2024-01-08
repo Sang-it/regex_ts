@@ -17,12 +17,8 @@ export class State {
     }
 
     getTransitionsOnSymbol(symbol: string): Set<State> {
-        let transitions = this._transitions.get(symbol);
-
-        if (!transitions) {
-            transitions = new Set();
-            this._transitions.set(symbol, transitions);
-        }
+        let transitions = this._transitions.get(symbol) ?? new Set();
+        this._transitions.set(symbol, transitions);
 
         return transitions;
     }
