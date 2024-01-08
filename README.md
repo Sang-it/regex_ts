@@ -83,7 +83,7 @@ re.matches("e") // false
 <!-- ROADMAP -->
 ## Roadmap
 
-- [] Add Wildcard Support (for now)
+- [ ] Add Wildcard Support (for now)
 
 
 <!-- CONTACT -->
