@@ -1,14 +1,15 @@
 import { NFA } from '../NFA';
 import { EPSILON_CLOSURE } from '../constants';
 
-type DFATransitionTable = Record<string, Record<string, string | number>>;
+type DFATransitionTableInitial = Record<string, Record<string, string | number>>;
+type DFATransitionTableFinal = Record<string, Record<string, number>>;
 
 export class DFA {
-    _nfa: NFA;
-    _originalAcceptingStateNumbers: Set<string | number>;
-    _acceptingStateNumbers: Set<string | number>;
-    _originalTransitionTable: DFATransitionTable;
-    _transitionTable: DFATransitionTable;
+    private _nfa: NFA;
+    private _originalAcceptingStateNumbers: Set<string | number>;
+    private _acceptingStateNumbers: Set<string | number>;
+    private _originalTransitionTable: DFATransitionTableInitial;
+    private _transitionTable: DFATransitionTableFinal;
 
     constructor(nfa: NFA) {
         this._nfa = nfa;
@@ -34,7 +35,7 @@ export class DFA {
         return this._originalAcceptingStateNumbers;
     }
 
-    setTransitionTable(table: DFATransitionTable) {
+    setTransitionTable(table: DFATransitionTableFinal) {
         this._transitionTable = table;
     }
 
@@ -43,6 +44,14 @@ export class DFA {
     }
 
     getTransitionTable() {
+        if (!this._transitionTable) {
+            this.buildTransitionTable();
+        }
+
+        return this._transitionTable;
+    }
+
+    private buildTransitionTable(): DFATransitionTableFinal {
         if (this._transitionTable) {
             return this._transitionTable;
         }
@@ -54,44 +63,34 @@ export class DFA {
 
         const startState = nfaTable[nfaStates[0]][EPSILON_CLOSURE];
 
-        const worklist = [startState];
-
+        const worklist: number[][] = [startState];
         const alphabet = this.getAlphabet();
         const nfaAcceptingStates = this._nfa.getAcceptingStateNumbers();
-
-        const dfaTable: DFATransitionTable = {};
+        const dfaTable: DFATransitionTableInitial = {};
 
         const updateAcceptingStates = (states: number[]) => {
-            for (const nfaAcceptingState of nfaAcceptingStates) {
-                if (states.indexOf(nfaAcceptingState) !== -1) {
-                    this._acceptingStateNumbers.add(states.join(','));
-                    break;
-                }
+            if (states.some(state => nfaAcceptingStates.has(state))) {
+                this._acceptingStateNumbers.add(states.join(','));
             }
         };
 
         while (worklist.length > 0) {
-            const states = worklist.shift();
-            const dfaStateLabel = (states as number[]).join(',');
+            const states = worklist.shift()!;
+            const dfaStateLabel = states.join(',');
 
             dfaTable[dfaStateLabel] = {};
 
             for (const symbol of alphabet) {
-                let onSymbol = [];
+                let onSymbol: number[] = [];
 
-                // Determine whether the combined state is accepting.
-                updateAcceptingStates(states as number[]);
+                updateAcceptingStates(states);
 
-                for (const state of states as number[]) {
-                    const nfaStatesOnSymbol = nfaTable[state][symbol];
-
-                    if (!nfaStatesOnSymbol) { continue; }
-
-                    for (const nfaStateOnSymbol of nfaStatesOnSymbol) {
-                        if (!nfaTable[nfaStateOnSymbol]) {
-                            continue;
-                        }
-                        onSymbol.push(...nfaTable[nfaStateOnSymbol][EPSILON_CLOSURE]);
+                for (const state of states) {
+                    const nfaStatesOnSymbol = nfaTable[state]?.[symbol];
+                    if (nfaStatesOnSymbol) {
+                        onSymbol.push(...nfaStatesOnSymbol.flatMap(nfaStateOnSymbol =>
+                            nfaTable[nfaStateOnSymbol]?.[EPSILON_CLOSURE] || []
+                        ));
                     }
                 }
 
@@ -100,10 +99,11 @@ export class DFA {
 
                 if (dfaStatesOnSymbol.length > 0) {
                     const dfaOnSymbolStr = dfaStatesOnSymbol.join(',');
+
                     dfaTable[dfaStateLabel][symbol] = dfaOnSymbolStr;
 
-                    if (!dfaTable.hasOwnProperty(dfaOnSymbolStr)) {
-                        worklist.unshift(dfaStatesOnSymbol as number[]);
+                    if (!dfaTable[dfaOnSymbolStr]) {
+                        worklist.unshift(dfaStatesOnSymbol);
                     }
                 }
             }
@@ -112,11 +112,9 @@ export class DFA {
         return (this._transitionTable = this._remapStateNumbers(dfaTable));
     }
 
-    _remapStateNumbers(calculatedDFATable: DFATransitionTable) {
+    private _remapStateNumbers(calculatedDFATable: DFATransitionTableInitial) {
         const newStatesMap: Record<string, number> = {};
-        this._originalTransitionTable = calculatedDFATable;
-
-        const transitionTable: DFATransitionTable = {};
+        const transitionTable: DFATransitionTableFinal = {};
 
         Object.keys(calculatedDFATable).forEach((originalNumber, newNumber) => {
             newStatesMap[originalNumber] = newNumber + 1;
@@ -133,14 +131,18 @@ export class DFA {
             transitionTable[newStatesMap[originalNumber]] = row;
         }
 
+        this._updateAcceptingStateNumbers(newStatesMap);
+
+        return transitionTable;
+    }
+
+    private _updateAcceptingStateNumbers(newStatesMap: Record<string, number>): void {
         this._originalAcceptingStateNumbers = this._acceptingStateNumbers;
         this._acceptingStateNumbers = new Set();
 
         for (const originalNumber of this._originalAcceptingStateNumbers) {
             this._acceptingStateNumbers.add(newStatesMap[originalNumber]);
         }
-
-        return transitionTable;
     }
 
     getOriginalTransitionTable() {
@@ -157,15 +159,9 @@ export class DFA {
 
         while (string[i]) {
             state = table[state][string[i++]] as number;
-            if (!state) {
-                return false;
-            }
+            if (!state) { return false; }
         }
 
-        if (!this.getAcceptingStateNumbers().has(state)) {
-            return false;
-        }
-
-        return true;
+        return this.getAcceptingStateNumbers().has(state);
     }
 }
