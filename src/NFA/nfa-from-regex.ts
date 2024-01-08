@@ -2,84 +2,76 @@ import { NFA } from './nfa';
 import parser from '../parser';
 import { alt, char, or, rep, plusRep, questionRep } from './builders';
 
-type ASTNode = {
+interface RegExpNode {
     type: string;
     flags: string;
     kind: string;
-    body: ASTNode;
+    body: RegExpNode;
     value: string;
-    expressions: ASTNode[];
-    left: ASTNode;
-    right: ASTNode;
+    expressions: RegExpNode[];
+    left: RegExpNode;
+    right: RegExpNode;
     quantifier: {
         kind: string;
     };
-    expression: ASTNode;
-};
+    expression: RegExpNode;
+}
 
-function gen(node: ASTNode) {
+function generateNFA(node: RegExpNode): NFA {
     switch (node.type) {
         case 'RegExp':
-            return RegExp(node);
+            return generateNFA(node.body);
         case 'Alternative':
-            return Alternative(node);
+            return generateAlternativeNFA(node);
         case 'Disjunction':
-            return Disjunction(node);
+            return generateDisjunctionNFA(node);
         case 'Repetition':
-            return Repetition(node);
+            return generateRepetitionNFA(node);
         case 'Char':
-            return Char(node);
+            return generateCharNFA(node);
         case 'Group':
-            return Group(node);
+            return generateGroupNFA(node);
         default:
             throw new Error(`Unknown node type: ${node.type}.`);
     }
 }
 
-function RegExp(node: ASTNode): NFA {
-    if (node.flags !== '') {
-        throw new Error(`NFA/DFA: Flags are not supported yet.`);
-    }
-
-    return gen(node.body);
-}
-
-function Alternative(node: ASTNode): NFA {
-    const fragments = (node.expressions || []).map(gen);
+function generateAlternativeNFA(node: RegExpNode): NFA {
+    const fragments = (node.expressions || []).map(generateNFA);
     return alt(fragments);
 }
 
-function Disjunction(node: ASTNode): NFA {
-    return or(gen(node.left), gen(node.right));
+function generateDisjunctionNFA(node: RegExpNode): NFA {
+    return or(generateNFA(node.left), generateNFA(node.right));
 }
 
-function Repetition(node: ASTNode): NFA {
+function generateRepetitionNFA(node: RegExpNode): NFA {
     switch (node.quantifier.kind) {
         case '*':
-            return rep(gen(node.expression));
+            return rep(generateNFA(node.expression));
         case '+':
-            return plusRep(gen(node.expression));
+            return plusRep(generateNFA(node.expression));
         case '?':
-            return questionRep(gen(node.expression));
+            return questionRep(generateNFA(node.expression));
         default:
-            throw new Error(`Unknown repeatition: ${node.quantifier.kind}.`);
+            throw new Error(`Unknown repetition: ${node.quantifier.kind}.`);
     }
 }
 
-function Char(node: ASTNode): NFA {
+function generateCharNFA(node: RegExpNode): NFA {
     if (node.kind !== 'simple') {
-        throw new Error(`NFA/DFA: Only simple chars are supported yet.`);
+        throw new Error(`Only simple chars are supported.`);
     }
 
     return char(node.value);
 }
 
-function Group(node: ASTNode): NFA {
-    return gen(node.expression);
+function generateGroupNFA(node: RegExpNode): NFA {
+    return generateNFA(node.expression);
 }
 
 export function build(regexp: string): NFA {
-    let ast = regexp;
+    let ast: RegExpNode;
 
     if (regexp as any instanceof RegExp) {
         regexp = `${regexp}`;
@@ -89,7 +81,10 @@ export function build(regexp: string): NFA {
         ast = parser.parse(regexp, {
             captureLocations: true,
         });
+
+        return generateNFA(ast);
     }
 
-    return gen(ast as unknown as ASTNode);
+    throw new Error(`Invalid regexp: ${regexp}.`);
 }
+
