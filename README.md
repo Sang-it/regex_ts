@@ -48,17 +48,17 @@ Install through your favorite package manager to get started.
 ### Installation
 
    ```sh
-   npm install t_rex
+   npm install @rux12/t_rex
    ```
    ```sh
-   yarn add t_rex
+   yarn add @rux12/t_rex
    ```
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 Basic Usage:
 ```ts
-import {build} from "t_rex";
+import {build} from "@rux12/t_rex";
 
 const re = build("/(ab|cd)/");
 
@@ -68,7 +68,7 @@ re.matches("ef") // false
 ```
 You could also use the builders provided.
 ```ts
-import {char, or} from "t_rex";
+import {char, or} from "@rux12/t_rex";
 
 const re = or(
 	char("a"),
