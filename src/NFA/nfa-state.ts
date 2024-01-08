@@ -3,9 +3,9 @@ import { EPSILON } from '../constants';
 
 export class NFAState extends State {
     number: number;
-    _epsilonClosure: Set<NFAState>;
+    private _epsilonClosure: Set<NFAState>;
 
-    matches(string: string, visited = new Set()) {
+    matches(string: string, visited = new Set<State>()): boolean {
         if (visited.has(this)) {
             return false;
         }
@@ -13,34 +13,30 @@ export class NFAState extends State {
         visited.add(this);
 
         if (string.length === 0) {
-            if (this.accepting) {
-                return true;
-            }
-
-            for (const nextState of this.getTransitionsOnSymbol(EPSILON)) {
-                if ((nextState as NFAState).matches('', visited)) {
-                    return true;
-                }
-            }
-            return false;
+            return this.accepting || this.epsilonTransitionMatches('', visited);
         }
 
-        const symbol = string[0];
-        const rest = string.slice(1);
+        const [symbol, rest] = [string[0], string.slice(1)];
 
+        return this.symbolTransitionMatches(symbol, rest) || this.epsilonTransitionMatches(string, visited);
+    }
+
+    private epsilonTransitionMatches(string: string, visited: Set<State>): boolean {
+        for (const nextState of this.getTransitionsOnSymbol(EPSILON)) {
+            if ((nextState as NFAState).matches(string, visited)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private symbolTransitionMatches(symbol: string, rest: string): boolean {
         const symbolTransitions = this.getTransitionsOnSymbol(symbol);
         for (const nextState of symbolTransitions) {
             if ((nextState as NFAState).matches(rest)) {
                 return true;
             }
         }
-
-        for (const nextState of this.getTransitionsOnSymbol(EPSILON)) {
-            if ((nextState as NFAState).matches(string, visited)) {
-                return true;
-            }
-        }
-
         return false;
     }
 

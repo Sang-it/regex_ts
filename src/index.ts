@@ -1,5 +1,5 @@
 import { build } from './NFA';
 
-const re = build('/a*/');
+const re = build('/(a|b)?/');
 
-console.log(re.matches("a"));
+console.log(re.matches("aaabbb"));
