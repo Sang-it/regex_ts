@@ -38,7 +38,7 @@ NFA/DFA based  Regex Machine
 
 I always wanted to know how Regular Expressions worked. That took me down this deep rabbit hole of Formal Grammar, Chomsky Hierarchy, Kleene Star and etc.
 
-I also had been learning Haskell at the time and the concept of Finite State Machine came up time and again. It turns out I utilize FSA to implement Regex Engines. So I did.
+I also had been learning Haskell at the time and the concept of Finite State Machine came up time and again. It turns out I can utilize FSA to implement Regex Engines. So I did.
 
 <!-- GETTING STARTED -->
 ## Getting Started
